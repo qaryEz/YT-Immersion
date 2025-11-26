@@ -1,0 +1,2 @@
+# YouTube-Immersion
+YouTubeをApple Music風の歌詞表示付きMVモードにする拡張機能
