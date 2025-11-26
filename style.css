@@ -1,0 +1,146 @@
+#mv-root-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    z-index: 2147483647;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif; }
+
+
+#mv-root-container video {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    transform: none !important;
+    object-fit: contain !important;
+    background: #000 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: block !important;
+    z-index: 0 !important;
+}
+
+#mv-overlay-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    pointer-events: none;
+
+    background: radial-gradient(circle at bottom right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 50%);
+}
+
+
+#mv-info-area {
+    position: absolute;
+    bottom: 60px;
+    left: 60px;
+    text-align: left;
+    color: #fff;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.5s ease;
+}
+#mv-info-area.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#mv-song-title {
+    font-size: 32px; 
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+    letter-spacing: 0.02em;
+}
+#mv-artist-name {
+    font-size: 16px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.8);
+    margin: 0;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+}
+
+
+#mv-lyrics-area {
+    position: absolute;
+    bottom: 40px;
+    right: 50px;
+    width: 40vw;  
+    height: 35vh;
+    overflow-y: scroll;
+    padding: 15vh 10px;
+    box-sizing: border-box;
+    mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+    pointer-events: auto;
+    text-align: right;
+}
+#mv-lyrics-area::-webkit-scrollbar { display: none; }
+
+.lyric-line {
+    font-size: 34px; 
+    font-weight: 700; 
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 28px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+    transform-origin: right center;
+    line-height: 1.4;
+    letter-spacing: 0.04em; 
+    font-feature-settings: "palt"; 
+}
+
+.lyric-line:hover { color: rgba(255,255,255,0.7); }
+
+.lyric-line.active {
+    color: #fff;
+    font-weight: 800;
+    transform: scale(1.08) translateX(-10px);
+    text-shadow: 0 0 25px rgba(255, 255, 255, 0.6); 
+}
+
+
+#mv-close-btn {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    padding: 8px 20px;
+    border-radius: 30px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    pointer-events: auto;
+    opacity: 0;
+    transition: opacity 0.3s;
+    backdrop-filter: blur(8px);
+}
+#mv-close-btn.visible { opacity: 1; }
+#mv-close-btn:hover { background: rgba(255,255,255,0.3); }
+
+
+.ytp-mv-mode-button {
+    vertical-align: top;
+    display: inline-block;
+    width: auto;
+    padding: 0 10px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    color: #fff;
+    line-height: 48px;
+    font-size: 14px;
+}
