@@ -44,7 +44,13 @@ function addMVButton() {
             btn.innerText = 'MVモード';
             btn.style.textAlign = 'center';
             btn.style.width = 'auto';
-            btn.onclick = () => startMVMode(false);
+            
+            // ボタンクリック時のイベント伝播を停止（一時停止防止）
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                startMVMode(false);
+            };
             controlBar.insertBefore(btn, controlBar.firstChild);
         }
     } catch(e) { console.error("Button add error:", e); }
@@ -71,20 +77,17 @@ async function startMVMode(isAuto = false) {
     rootContainer.appendChild(targetVideo);
 
     const styleEl = document.createElement('style');
-    // ★ここを修正: 他のボタンとデザインを完全に統一★
+    // CSS定義
     styleEl.textContent = `
+        /* --- ベース設定 --- */
         #mv-shot-btn {
             position: absolute; bottom: 40px; right: 40px; z-index: 2000;
             opacity: 0; pointer-events: none;
             transition: opacity 0.4s, transform 0.2s, background 0.2s;
-            
-            /* ガラスデザインの適用 */
             background: rgba(20, 20, 20, 0.6);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.15);
             color: rgba(255, 255, 255, 0.9);
-            
-            /* 形状の統一 (角丸・余白) */
             border-radius: 30px;
             padding: 10px 24px;
             font-size: 13px;
@@ -93,7 +96,6 @@ async function startMVMode(isAuto = false) {
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         #mv-shot-btn.visible { opacity: 1; pointer-events: auto; }
-        
         #mv-shot-btn:hover { 
             transform: scale(1.05); 
             background: rgba(255, 255, 255, 0.2);
@@ -102,6 +104,43 @@ async function startMVMode(isAuto = false) {
             box-shadow: 0 8px 25px rgba(0,0,0,0.5);
         }
         #mv-shot-btn:active { transform: scale(0.95); }
+
+        /* 歌詞エリア修正: 左側に余白を追加 */
+        #mv-lyrics-area {
+            position: absolute; bottom: 60px; right: 60px; 
+            left: 30%; 
+            
+            height: 40vh; overflow-y: scroll;
+            
+            /* ▼▼▼ 修正: 左側に50pxの余白を追加 (上 右 下 左) ▼▼▼ */
+            padding: 15vh 0 15vh 50px; 
+            
+            box-sizing: border-box;
+            mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
+            pointer-events: auto; text-align: right;
+            scrollbar-width: none; -ms-overflow-style: none;
+        }
+        #mv-lyrics-area::-webkit-scrollbar { display: none; }
+
+        .lyric-line {
+            font-size: 32px; font-weight: 700; color: rgba(255, 255, 255, 0.35);
+            margin-bottom: 32px; cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transform-origin: right center; line-height: 1.5;
+            font-feature-settings: "palt"; letter-spacing: 0.02em;
+            
+            /* 折り返し設定 */
+            white-space: pre-wrap;
+            word-break: keep-all;
+            overflow-wrap: break-word;
+            max-width: 100%;
+        }
+        .lyric-line:hover { color: rgba(255,255,255,0.8); transform: translateX(-10px); }
+        .lyric-line.active {
+            color: #fff; transform: scale(1.05) translateX(-20px);
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+        }
 
         /* 歌詞選択UI */
         .lyric-selection-container {
@@ -130,13 +169,74 @@ async function startMVMode(isAuto = false) {
             font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 15px;
             letter-spacing: 0.05em; text-align: center;
         }
+
+        /* カーソル非表示用 */
+        #mv-root-container.hide-cursor {
+            cursor: none !important;
+        }
+        #mv-root-container.hide-cursor * {
+            cursor: none !important;
+        }
+
+        /* 中央ステータスアイコン */
+        #mv-center-status {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            width: 84px; height: 84px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; z-index: 100;
+        }
+        #mv-center-status.animate {
+            animation: mv-icon-pop 0.8s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+        }
+        @keyframes mv-icon-pop {
+            0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            15%  { opacity: 1; transform: translate(-50%, -50%) scale(1.0); }
+            30%  { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.2); }
+        }
+        .mv-status-svg {
+            width: 40px; height: 40px; fill: #fff;
+            display: none; 
+        }
+
+        /* 曲名表示 */
+        #mv-song-title {
+            font-size: 42px; font-weight: 800; margin: 0 0 8px 0;
+            line-height: 1.1; letter-spacing: -0.02em;
+            color: #ffffff; 
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+            white-space: nowrap; overflow: hidden; display: block;
+            max-width: 40vw; 
+        }
+        #mv-song-title.marquee {
+            display: flex; width: fit-content;
+        }
+        /* ループアニメーション調整 (停止時間追加) */
+        #mv-song-title.marquee span {
+            display: inline-block; padding-right: 50px;
+            animation: scroll-left 18s ease-in infinite;
+        }
+        @keyframes scroll-left {
+            0%    { transform: translateX(0); }
+            20%   { transform: translateX(0); } /* 停止時間 */
+            100%  { transform: translateX(-100%); }
+        }
     `;
     rootContainer.appendChild(styleEl);
 
     const overlayContent = document.createElement('div');
     overlayContent.id = 'mv-overlay-content';
     
+    // HTML構造: 中央アイコンコンテナを追加
     overlayContent.innerHTML = `
+        <div id="mv-center-status">
+            <svg id="mv-icon-play" class="mv-status-svg" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <svg id="mv-icon-pause" class="mv-status-svg" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </div>
+
         <div id="mv-info-area"></div>
         <div id="mv-lyrics-area"></div>
         <button id="mv-close-btn" class="mv-glass-btn">閉じる</button>
@@ -185,6 +285,11 @@ async function startMVMode(isAuto = false) {
     targetVideo.addEventListener('play', () => syncToRemote());
     targetVideo.addEventListener('pause', () => syncToRemote());
 
+    // イベントリスナー追加
+    targetVideo.addEventListener('play', () => showCenterStatus('play'));
+    targetVideo.addEventListener('pause', () => showCenterStatus('pause'));
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+
     document.addEventListener('mousemove', onUserAction);
     document.addEventListener('click', onUserAction);
     onUserAction(); 
@@ -202,6 +307,9 @@ function endMVMode(keepActive = false) {
         clearTimeout(idleTimer);
         idleTimer = null;
     }
+
+    // イベントリスナー解除
+    document.removeEventListener('fullscreenchange', onFullscreenChange);
 
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     
@@ -299,12 +407,38 @@ async function updateMVContent(retryCount = 0) {
     let rawArtist = document.querySelector('ytd-video-owner-renderer ytd-channel-name a')?.textContent.trim() || "";
     
     const bracketMatch = rawTitle.match(/『(.*?)』/);
-    if (bracketMatch) songTitle = bracketMatch[1];
-    else songTitle = songTitle.replace(/【.*?】/g, '').replace(/\[.*?\]/g, '').replace(/\(.*?\)/g, '').replace(/Official\s*Music\s*Video/gi, '').replace(/MV/gi, '').replace(/full/gi, '').replace(/公式/g, '').replace(/\//g, '').replace(rawArtist, '').trim();
+    if (bracketMatch) {
+        songTitle = bracketMatch[1];
+    } else {
+        // アーティスト名などを削除
+        songTitle = songTitle
+            .replace(/【.*?】/g, '')
+            .replace(/\[.*?\]/g, '')
+            .replace(/\(.*?\)/g, '')
+            .replace(/Official\s*Music\s*Video/gi, '')
+            .replace(/MV/gi, '')
+            .replace(/full/gi, '')
+            .replace(/公式/g, '')
+            .replace(/\//g, '')
+            .replace(rawArtist, '')
+            .trim();
+
+        // 修正: 先頭や末尾に残ったハイフン(-)やスペースを削除
+        songTitle = songTitle.replace(/^[\s\-]+|[\s\-]+$/g, '');
+    }
     let artistName = rawArtist.replace(/Official\s*Channel/gi, '').replace(/公式/g, '').trim();
 
     if(infoArea) {
         infoArea.innerHTML = `<h1 id="mv-song-title">${songTitle}</h1><p id="mv-artist-name">${artistName}</p>`;
+        
+        const titleEl = document.getElementById('mv-song-title');
+        if (titleEl) {
+            if (titleEl.scrollWidth > titleEl.clientWidth) {
+                titleEl.classList.add('marquee');
+                titleEl.innerHTML = `<span>${songTitle}</span><span>${songTitle}</span>`;
+            }
+        }
+        
         lastTitle = "";
         syncToRemote(true);
     }
@@ -353,11 +487,17 @@ function updateSidebarContent(retryCount) {
     }
 }
 
+// カーソル非表示ロジック、クリック再生制御
 function onUserAction(e) {
     const infoArea = document.getElementById('mv-info-area');
     const closeBtn = document.getElementById('mv-close-btn');
     const qrBtn = document.getElementById('mv-qr-btn'); 
     const shotBtn = document.getElementById('mv-shot-btn'); 
+
+    // 1. マウスが動いたら、カーソルとUIを表示する
+    if (rootContainer) {
+        rootContainer.classList.remove('hide-cursor');
+    }
 
     if(infoArea) {
         if(infoArea) infoArea.classList.add('visible');
@@ -365,8 +505,10 @@ function onUserAction(e) {
         if(qrBtn) qrBtn.classList.add('visible');
         if(shotBtn) shotBtn.classList.add('visible');
 
+        // タイマーをリセット
         if (idleTimer) clearTimeout(idleTimer);
         
+        // 3秒後に隠す
         idleTimer = setTimeout(() => {
             const ia = document.getElementById('mv-info-area');
             const cb = document.getElementById('mv-close-btn');
@@ -377,21 +519,38 @@ function onUserAction(e) {
             if(cb) cb.classList.remove('visible');
             if(qb) qb.classList.remove('visible');
             if(sb) sb.classList.remove('visible');
+
+            // 3秒経過したらカーソルも隠す
+            if (rootContainer) {
+                rootContainer.classList.add('hide-cursor');
+            }
         }, 3000);
     }
 
-    if (e && e.type === 'click' && rootContainer && !document.fullscreenElement) {
+    // --- クリック時の処理 (再生/一時停止) ---
+    if (e && e.type === 'click' && rootContainer) {
         const target = e.target;
-        if (target.closest('#shot-result-overlay')) return;
-        if (target.closest('#shot-selector-overlay')) return; 
-        if (target.closest('#mv-qr-overlay')) return;
-        
-        if (target.id !== 'mv-close-btn' && 
-            !target.closest('a') && 
-            !target.closest('#mv-sidebar') && 
-            target.id !== 'mv-qr-btn' && 
-            target.id !== 'mv-shot-btn') {
-            rootContainer.requestFullscreen().catch(() => {});
+
+        // ボタンや操作パネルなどをクリックした場合は一時停止しない
+        if (target.closest('button') || 
+            target.closest('.mv-glass-btn') || 
+            target.closest('a') || 
+            target.closest('.lyric-line') || 
+            target.closest('#mv-sidebar') || 
+            target.closest('#shot-result-overlay') || 
+            target.closest('#shot-selector-overlay') || 
+            target.closest('#mv-qr-overlay')) {
+            return;
+        }
+
+        // 再生 / 一時停止 の切り替え
+        if (targetVideo) {
+            if (targetVideo.paused) {
+                targetVideo.play();
+            } else {
+                targetVideo.pause();
+            }
+            syncToRemote(); 
         }
     }
 }
@@ -512,6 +671,7 @@ function syncToRemote(forceFullData = false) {
     const artistEl = document.getElementById('mv-artist-name') || document.querySelector('ytd-video-owner-renderer ytd-channel-name a');
     const thumbUrl = getHighResThumbnail();
     
+    // Marquee状態だと重複しているのでtextContentで取得
     const currentTitle = titleEl ? titleEl.textContent.trim() : 'Loading...';
     
     let lyricsToSend = null;
@@ -746,7 +906,6 @@ function showShotSelector(frames) {
 
     const closeBtn = document.createElement('button');
     closeBtn.innerText = "キャンセル";
-    // ★統一: mv-glass-btn
     closeBtn.className = "mv-glass-btn";
     closeBtn.style.marginTop = "20px";
     closeBtn.onclick = () => overlay.remove();
@@ -777,12 +936,11 @@ function processScreenshot(dataUrl, videoEl) {
         ctx.fillRect(0,0,canvas.width, canvas.height);
         ctx.drawImage(img, sx, sy, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
         
-        generateAndShare(canvas); // 初回は歌詞なし
+        generateAndShare(canvas); 
     };
     img.src = dataUrl;
 }
 
-// ★ デザインを「推しファースト」に完全変更 (シネマティック・ミニマル) ★
 function generateAndShare(sourceCanvas, selectedLyrics = []) {
     if(sourceCanvas.width === 0) return;
 
@@ -790,7 +948,8 @@ function generateAndShare(sourceCanvas, selectedLyrics = []) {
     let artistName = "Artist Name";
     try {
         const titleEl = document.getElementById('mv-song-title') || document.querySelector('h1.ytd-video-primary-info-renderer');
-        if(titleEl) songTitle = titleEl.innerText.trim();
+        // Marquee状態だと重複しているのでtextContentで取得
+        if(titleEl) songTitle = titleEl.textContent.trim();
         const artistEl = document.getElementById('mv-artist-name') || document.querySelector('ytd-video-owner-renderer ytd-channel-name a');
         if(artistEl) artistName = artistEl.innerText.trim();
     } catch(e) {}
@@ -850,8 +1009,13 @@ function generateAndShare(sourceCanvas, selectedLyrics = []) {
         ctx.font = `600 ${lyricSize}px -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif`;
         ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
         ctx.shadowBlur = 6;
+        
+        // 描画できる最大幅を計算 (左右のマージン分を引く)
+        const maxWidth = finalCanvas.width - (margin * 2);
+
         for (let i = selectedLyrics.length - 1; i >= 0; i--) {
-            ctx.fillText(selectedLyrics[i], margin, currentY);
+            // 第4引数に maxWidth を渡して、はみ出る場合は自動縮小させる
+            ctx.fillText(selectedLyrics[i], margin, currentY, maxWidth);
             currentY -= (lyricSize * 1.6); 
         }
     }
@@ -859,7 +1023,6 @@ function generateAndShare(sourceCanvas, selectedLyrics = []) {
     showResultOverlay(finalCanvas, songTitle, sourceCanvas, selectedLyrics);
 }
 
-// ★ 結果画面: 歌詞選択UI付き ★
 function showResultOverlay(currentCanvas, titleText, originalSourceCanvas, currentLyrics) {
     const old = document.getElementById('shot-result-overlay');
     if(old) old.remove();
@@ -881,7 +1044,6 @@ function showResultOverlay(currentCanvas, titleText, originalSourceCanvas, curre
         alignItems: 'flex-start'
     });
 
-    // 左カラム
     const leftCol = document.createElement('div');
     leftCol.style.flex = '2';
     leftCol.style.display = 'flex'; leftCol.style.flexDirection = 'column'; leftCol.style.alignItems = 'center';
@@ -900,13 +1062,11 @@ function showResultOverlay(currentCanvas, titleText, originalSourceCanvas, curre
 
     const closeBtn = document.createElement('button');
     closeBtn.innerText = "閉じる";
-    // ★統一: mv-glass-btn
     closeBtn.className = "mv-glass-btn";
     closeBtn.onclick = () => overlay.remove();
 
     const copyBtn = document.createElement('button');
     copyBtn.innerText = "画像をコピーしてXで共有";
-    // ★統一: mv-glass-btn
     copyBtn.className = "mv-glass-btn";
     copyBtn.onclick = () => {
         currentCanvas.toBlob(blob => {
@@ -928,7 +1088,6 @@ function showResultOverlay(currentCanvas, titleText, originalSourceCanvas, curre
     btnRow.appendChild(copyBtn);
     leftCol.appendChild(btnRow);
 
-    // 右カラム
     const rightCol = document.createElement('div');
     rightCol.className = 'lyric-selection-container';
     
@@ -970,7 +1129,6 @@ function showResultOverlay(currentCanvas, titleText, originalSourceCanvas, curre
 
     const updateBtn = document.createElement('button');
     updateBtn.innerText = "画像を更新 🔄";
-    // ★統一: mv-glass-btn
     updateBtn.className = "mv-glass-btn";
     updateBtn.style.width = '100%'; updateBtn.style.marginTop = '15px';
     updateBtn.onclick = () => {
@@ -982,4 +1140,26 @@ function showResultOverlay(currentCanvas, titleText, originalSourceCanvas, curre
     if (lyricsData.length > 0) contentContainer.appendChild(rightCol);
     overlay.appendChild(contentContainer);
     root.appendChild(overlay);
+}
+
+// ヘルパー関数群（全画面監視、中央アイコン表示）
+function onFullscreenChange() {
+    if (!document.fullscreenElement && rootContainer) {
+        endMVMode(false);
+    }
+}
+
+function showCenterStatus(type) {
+    const container = document.getElementById('mv-center-status');
+    const playIcon = document.getElementById('mv-icon-play');
+    const pauseIcon = document.getElementById('mv-icon-pause');
+    
+    if (!container || !playIcon || !pauseIcon) return;
+
+    playIcon.style.display = (type === 'play') ? 'block' : 'none';
+    pauseIcon.style.display = (type === 'pause') ? 'block' : 'none';
+
+    container.classList.remove('animate');
+    void container.offsetWidth; 
+    container.classList.add('animate');
 }
