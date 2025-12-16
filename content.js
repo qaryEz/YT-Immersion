@@ -14,7 +14,7 @@ let rootContainer = null;
 let lyricsData = [];
 let idleTimer = null;
 let buttonObserverTimer = null; 
-let isInfoPinned = false; // ★追加: ピン留め状態管理用
+let isInfoPinned = false; 
 
 // --- 初期化 ---
 function init() {
@@ -22,12 +22,17 @@ function init() {
         setupBridge();
         startButtonObserver();
         
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && rootContainer) {
+                endMVMode(false);
+            }
+        });
+
         if (sessionStorage.getItem('mv_mode_active') === 'true' && !rootContainer) {
             setTimeout(() => startMVMode(true), 1500);
         }
     } catch(e) { console.error("Init error:", e); }
 }
-
 async function onNavigate() {
     init();
     const isMVModeActive = sessionStorage.getItem('mv_mode_active') === 'true';
@@ -38,7 +43,7 @@ async function onNavigate() {
     }
 }
 
-// --- ボタン監視 ---
+
 function startButtonObserver() {
     if (buttonObserverTimer) clearInterval(buttonObserverTimer);
     addMVButton();
@@ -51,10 +56,9 @@ function startButtonObserver() {
 
 function addMVButton() {
     try {
-        if (document.querySelector('.ytp-mv-mode-button')) return;
-        
         const controlBar = document.querySelector('.ytp-right-controls');
-        if (controlBar) {
+        if (!controlBar) return;
+        if (!document.querySelector('.ytp-mv-mode-button')) {
             const btn = document.createElement('div');
             btn.className = 'ytp-button ytp-mv-mode-button';
             btn.innerText = 'MVモード';
@@ -72,7 +76,6 @@ function addMVButton() {
     } catch(e) { console.error("Button add error:", e); }
 }
 
-// --- MVモード開始 ---
 async function startMVMode(isAuto = false) {
     if (rootContainer) return;
     targetVideo = document.querySelector('.video-stream.html5-main-video') || document.querySelector('video');
@@ -95,36 +98,16 @@ async function startMVMode(isAuto = false) {
     const styleEl = document.createElement('style');
     styleEl.textContent = `
         /* --- ベース設定 --- */
-        #mv-shot-btn {
-            position: absolute; bottom: 40px; right: 40px; z-index: 2000;
-            opacity: 0; pointer-events: none;
-            transition: opacity 0.4s, transform 0.2s, background 0.2s;
-            background: rgba(20, 20, 20, 0.6);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: rgba(255, 255, 255, 0.9);
-            border-radius: 30px;
-            padding: 10px 24px;
-            font-size: 13px; font-weight: 600; letter-spacing: 0.02em;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-        #mv-shot-btn.visible { opacity: 1; pointer-events: auto; }
-        #mv-shot-btn:hover { 
-            transform: scale(1.05); 
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.3);
-            color: #fff; box-shadow: 0 8px 25px rgba(0,0,0,0.5);
-        }
-        #mv-shot-btn:active { transform: scale(0.95); }
-
-        /* 歌詞エリア */
         #mv-lyrics-area {
-            position: absolute; bottom: 60px; right: 60px; 
-            left: 30%; height: 40vh; overflow-y: scroll;
-            padding: 15vh 0 15vh 50px; 
+            position: absolute; 
+            bottom: 60px; right: 60px;
+            width: 40vw; max-width: 500px; left: auto;
+            height: 30vh; /* ★変更: 高さを半分に */
+            overflow-y: scroll;
+            padding: 5vh 0 10vh 0;
             box-sizing: border-box;
-            mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
+            mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
             pointer-events: auto; text-align: right;
             scrollbar-width: none; -ms-overflow-style: none;
         }
@@ -144,38 +127,9 @@ async function startMVMode(isAuto = false) {
             text-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
         }
 
-        /* 歌詞選択UI */
-        .lyric-selection-container {
-            flex: 1; max-width: 320px; 
-            background: rgba(30, 30, 30, 0.6);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-radius: 16px; padding: 20px; overflow-y: auto;
-            max-height: 60vh; border: 1px solid rgba(255,255,255,0.15);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            display: flex; flex-direction: column;
-        }
-        .lyric-selection-container::-webkit-scrollbar { display: none; }
-        
-        .lyric-select-item {
-            padding: 10px 14px; margin-bottom: 6px; border-radius: 8px;
-            cursor: pointer; color: rgba(255,255,255,0.6); font-size: 13px;
-            transition: all 0.2s; line-height: 1.4;
-            border-left: 3px solid transparent;
-        }
-        .lyric-select-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
-        .lyric-select-item.selected {
-            background: rgba(255,255,255,0.15); color: #fff; font-weight: 600;
-            border-left: 3px solid #fff;
-        }
-        .lyric-selection-header {
-            font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 15px;
-            letter-spacing: 0.05em; text-align: center;
-        }
-
         #mv-root-container.hide-cursor { cursor: none !important; }
         #mv-root-container.hide-cursor * { cursor: none !important; }
 
-        /* 中央ステータスアイコン */
         #mv-center-status {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%) scale(0.8);
@@ -196,7 +150,6 @@ async function startMVMode(isAuto = false) {
         }
         .mv-status-svg { width: 40px; height: 40px; fill: #fff; display: none; }
 
-        /* 曲名表示 */
         #mv-song-title {
             font-size: 42px; font-weight: 800; margin: 0 0 8px 0;
             line-height: 1.1; letter-spacing: -0.02em; color: #ffffff; 
@@ -219,6 +172,7 @@ async function startMVMode(isAuto = false) {
     const overlayContent = document.createElement('div');
     overlayContent.id = 'mv-overlay-content';
     
+    // HTML構造は変更なし
     overlayContent.innerHTML = `
         <div id="mv-center-status">
             <svg id="mv-icon-play" class="mv-status-svg" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -226,6 +180,7 @@ async function startMVMode(isAuto = false) {
         </div>
 
         <div id="mv-info-area"></div>
+        <div id="mv-lyrics-header"></div>
         <div id="mv-lyrics-area"></div>
         
         <button id="mv-pin-btn" class="mv-glass-btn">📌 固定オフ</button>
@@ -242,7 +197,6 @@ async function startMVMode(isAuto = false) {
             </div>
         </div>
     `;
-
 
     const closeBtn = overlayContent.querySelector('#mv-close-btn');
     if(closeBtn) closeBtn.onclick = () => endMVMode(false);
@@ -346,13 +300,25 @@ function endMVMode(keepActive = false) {
     }
 }
 
+let isLyricSelectionMode = false;
+
 async function updateMVContent(retryCount = 0) {
     const infoArea = document.getElementById('mv-info-area');
     const lyricsArea = document.getElementById('mv-lyrics-area');
+    const lyricsHeader = document.getElementById('mv-lyrics-header');
     
+    // リセット処理
+    if(lyricsArea) {
+        lyricsArea.classList.remove('no-lyrics', 'fade-out', 'selecting');
+        lyricsArea.onmouseenter = null;
+        lyricsArea.onmouseleave = null;
+    }
+    isLyricSelectionMode = false; 
+
     if (retryCount === 0) {
         if(infoArea) infoArea.innerHTML = '';
         if(lyricsArea) lyricsArea.innerHTML = '<p style="color:rgba(255,255,255,0.3); font-size:20px; padding:20px;">読み込み中...</p>';
+        if(lyricsHeader) lyricsHeader.innerHTML = '';
         lyricsData = [];
         await new Promise(r => setTimeout(r, 1000)); 
     }
@@ -378,12 +344,26 @@ async function updateMVContent(retryCount = 0) {
             setTimeout(() => updateMVContent(retryCount + 1), 1500); 
             return; 
         } else if(lyricsArea) {
-            lyricsArea.innerHTML = '<p style="color:rgba(255,255,255,0.3); font-size:20px; padding:20px;">歌詞なし</p>';
+            lyricsArea.innerHTML = '<p class="no-lyrics-msg">歌詞情報がありません</p>';
+            lyricsArea.classList.add('no-lyrics');
+            
+            const timer = setTimeout(() => {
+                if(lyricsArea) lyricsArea.classList.add('fade-out');
+            }, 5000);
+
+            lyricsArea.onmouseenter = () => {
+                clearTimeout(timer);
+                lyricsArea.classList.remove('fade-out');
+            };
+            lyricsArea.onmouseleave = () => {
+                lyricsArea.classList.add('fade-out');
+            };
         }
     } else {
         const closeTranscriptBtn = document.querySelector('ytd-transcript-renderer button[aria-label="閉じる"]');
         if(closeTranscriptBtn) closeTranscriptBtn.click();
 
+        // 歌詞データ生成
         lyricsData = Array.from(segments).map(seg => {
             const timeStr = seg.querySelector('.segment-timestamp').textContent.trim();
             const text = seg.querySelector('.segment-text').textContent.trim();
@@ -394,18 +374,103 @@ async function updateMVContent(retryCount = 0) {
             return { time: seconds, text: text, el: null };
         });
 
+
+        if(lyricsHeader) {
+            lyricsHeader.innerHTML = '';
+
+
+            const copyAllBtn = document.createElement('button');
+            copyAllBtn.className = 'mv-lyric-action-btn';
+            copyAllBtn.innerHTML = '📋 全コピー';
+            copyAllBtn.onclick = () => {
+                const fullText = lyricsData.map(l => l.text).join('\n');
+                navigator.clipboard.writeText(fullText).then(() => showToast("全ての歌詞をコピーしました"));
+            };
+
+  
+            const selectBtn = document.createElement('button');
+            selectBtn.className = 'mv-lyric-action-btn';
+            selectBtn.innerHTML = '✨ 選択';
+            
+
+            selectBtn.onclick = () => {
+                isLyricSelectionMode = !isLyricSelectionMode;
+                
+                if(isLyricSelectionMode) {
+
+                    lyricsArea.classList.add('selecting');
+                    selectBtn.innerHTML = 'キャンセル';
+                    copyAllBtn.innerHTML = 'コピー (0)';
+                    copyAllBtn.classList.add('primary');                     
+            
+                    copyAllBtn.onclick = () => {
+                        const selectedEls = lyricsArea.querySelectorAll('.lyric-line-container.selected .lyric-line');
+                        if(selectedEls.length === 0) return;
+                        
+                        const text = Array.from(selectedEls).map(el => el.innerText).join('\n');
+                        navigator.clipboard.writeText(text).then(() => {
+                            showToast(`${selectedEls.length}行をコピーしました`);
+                            selectBtn.click(); 
+                        });
+                    };
+                } else {
+            
+                    lyricsArea.classList.remove('selecting');
+                    const selected = lyricsArea.querySelectorAll('.selected');
+                    selected.forEach(el => el.classList.remove('selected')); 
+
+                    selectBtn.innerHTML = '✨ 選択';
+                    copyAllBtn.innerHTML = '📋 全コピー';
+                    copyAllBtn.classList.remove('primary');
+
+          
+                    copyAllBtn.onclick = () => {
+                        const fullText = lyricsData.map(l => l.text).join('\n');
+                        navigator.clipboard.writeText(fullText).then(() => showToast("全ての歌詞をコピーしました"));
+                    };
+                }
+            };
+
+            lyricsHeader.appendChild(selectBtn);
+            lyricsHeader.appendChild(copyAllBtn);
+        }
+
+
         if(lyricsArea) {
             lyricsArea.innerHTML = '';
             lyricsData.forEach(line => {
-                const p = document.createElement('p');
-                p.className = 'lyric-line';
-                p.innerText = line.text;
-                p.onclick = () => { if(targetVideo) targetVideo.currentTime = line.time; };
-                lyricsArea.appendChild(p);
-                line.el = p;
+                const container = document.createElement('div');
+                container.className = 'lyric-line-container';
+
+                const textSpan = document.createElement('span');
+                textSpan.className = 'lyric-line';
+                textSpan.innerText = line.text;
+
+    
+                container.onclick = (e) => {
+                    if (isLyricSelectionMode) {
+                        e.stopPropagation();
+                        container.classList.toggle('selected');
+                        
+                   
+                        const count = lyricsArea.querySelectorAll('.lyric-line-container.selected').length;
+                        const copyBtn = lyricsHeader.querySelector('.mv-lyric-action-btn.primary');
+                        if(copyBtn) copyBtn.innerHTML = `コピー (${count})`;
+
+                    } else {
+                    
+                        if(targetVideo) targetVideo.currentTime = line.time;
+                    }
+                };
+
+                container.appendChild(textSpan);
+                lyricsArea.appendChild(container);
+                
+                line.el = textSpan;
             });
         }
     }
+
 
     let rawTitle = document.querySelector('h1.ytd-video-primary-info-renderer')?.textContent.trim() || "";
     let songTitle = rawTitle;
@@ -415,28 +480,10 @@ async function updateMVContent(retryCount = 0) {
     if (bracketMatch) {
         songTitle = bracketMatch[1];
     } else {
-        songTitle = songTitle
-            .replace(/【.*?】/g, '')
-            .replace(/\[.*?\]/g, '')
-            .replace(/\(.*?\)/g, '')
-            .replace(/Official\s*Music\s*Video/gi, '')
-            .replace(/MV/gi, '')
-            .replace(/full/gi, '')
-            .replace(/公式/g, '')
-            .replace(/\//g, '')
-            .replace(rawArtist, '')
-            .trim()
-            .replace(/^[\s\-]+|[\s\-]+$/g, '');
+        songTitle = songTitle.replace(/【.*?】/g, '').replace(/\[.*?\]/g, '').replace(/\(.*?\)/g, '').replace(/Official\s*Music\s*Video/gi, '').replace(/MV/gi, '').replace(/full/gi, '').replace(/公式/g, '').replace(/\//g, '').replace(rawArtist, '').trim().replace(/^[\s\-]+|[\s\-]+$/g, '');
     }
     
-    // アーティスト名整形
-    let artistName = rawArtist
-        .replace(/Official\s*Channel/gi, '')
-        .replace(/Official/gi, '')
-        .replace(/Channel/gi, '')
-        .replace(/チャンネル/g, '')
-        .replace(/公式/g, '')
-        .trim();
+    let artistName = rawArtist.replace(/Official\s*Channel/gi, '').replace(/Official/gi, '').replace(/Channel/gi, '').replace(/チャンネル/g, '').replace(/公式/g, '').trim();
 
     if(infoArea) {
         infoArea.innerHTML = `<h1 id="mv-song-title">${songTitle}</h1><p id="mv-artist-name">${artistName}</p>`;
@@ -455,7 +502,6 @@ async function updateMVContent(retryCount = 0) {
     
     try { updateSidebarContent(0); } catch(e){}
 }
-
 function updateSidebarContent(retryCount) {
     const listContainer = document.getElementById('mv-next-list');
     if (!listContainer) return;
@@ -502,35 +548,40 @@ function onUserAction(e) {
     const closeBtn = document.getElementById('mv-close-btn');
     const qrBtn = document.getElementById('mv-qr-btn'); 
     const shotBtn = document.getElementById('mv-shot-btn');
-    const pinBtn = document.getElementById('mv-pin-btn'); 
+    const pinBtn = document.getElementById('mv-pin-btn');
+    const lyricsHeader = document.getElementById('mv-lyrics-header'); 
 
     if (rootContainer) {
         rootContainer.classList.remove('hide-cursor');
     }
 
     if(infoArea) {
-        if(infoArea) infoArea.classList.add('visible');
+        // マウスが動いたら全部表示
+        infoArea.classList.add('visible');
         if(closeBtn) closeBtn.classList.add('visible');
         if(qrBtn) qrBtn.classList.add('visible');
         if(shotBtn) shotBtn.classList.add('visible');
         if(pinBtn) pinBtn.classList.add('visible'); 
+        if(lyricsHeader) lyricsHeader.classList.add('visible'); // ★追加
 
         if (idleTimer) clearTimeout(idleTimer);
         
+        // 3秒放置したら消す
         idleTimer = setTimeout(() => {
             const ia = document.getElementById('mv-info-area');
             const cb = document.getElementById('mv-close-btn');
             const qb = document.getElementById('mv-qr-btn');
             const sb = document.getElementById('mv-shot-btn');
-            const pb = document.getElementById('mv-pin-btn'); 
+            const pb = document.getElementById('mv-pin-btn');
+            const lh = document.getElementById('mv-lyrics-header');
             
-     
             if(ia && !isInfoPinned) ia.classList.remove('visible');
 
             if(cb) cb.classList.remove('visible');
             if(qb) qb.classList.remove('visible');
             if(sb) sb.classList.remove('visible');
             if(pb) pb.classList.remove('visible');
+            if(lh) lh.classList.remove('visible'); 
 
             if (rootContainer) {
                 rootContainer.classList.add('hide-cursor');
@@ -538,12 +589,13 @@ function onUserAction(e) {
         }, 3000);
     }
 
+
     if (e && e.type === 'click' && rootContainer) {
         const target = e.target;
         if (target.closest('button') || 
             target.closest('.mv-glass-btn') || 
             target.closest('#mv-pin-btn') ||
-            target.closest('a') || 
+            target.closest('.mv-lyric-action-btn') ||             target.closest('a') || 
             target.closest('.lyric-line') || 
             target.closest('#mv-sidebar') || 
             target.closest('#shot-result-overlay') || 
@@ -733,24 +785,28 @@ async function startHybridShotSequence() {
     const video = document.querySelector('.video-stream.html5-main-video');
     if (!video) return;
 
+    const isMVMode = !!document.getElementById('mv-root-container');
     const btn = document.getElementById('mv-shot-btn');
-    if(btn) {
+
+    if(isMVMode && btn) {
         btn.innerText = "連写解析中...";
         btn.style.background = "rgba(255, 50, 50, 0.8)";
+    } else {
+        showToast("ベストショット解析中...");
     }
 
     try {
         const frames = await tryBurstCapture(video);
         if(frames && frames.length > 0) {
             showShotSelector(frames);
-            if(btn) { btn.innerText = "📸 Shot"; btn.style.background = ""; }
+            if(isMVMode && btn) { btn.innerText = "📸 Shot"; btn.style.background = ""; }
             return; 
         }
     } catch(e) {
         console.log("Burst capture blocked (CORS/DRM). Falling back to Screenshot.", e);
     }
 
-    if(btn) btn.innerText = "高画質撮影中...";
+    if(isMVMode && btn) btn.innerText = "高画質撮影中...";
     takeSingleScreenShot();
 }
 
@@ -809,6 +865,7 @@ async function takeSingleScreenShot() {
     const overlay = document.getElementById('mv-overlay-content');
     const sidebar = document.getElementById('mv-sidebar');
     const trigger = document.getElementById('mv-sidebar-trigger');
+    
     if(overlay) overlay.style.display = 'none';
     if(sidebar) sidebar.style.display = 'none';
     if(trigger) trigger.style.display = 'none';
@@ -821,6 +878,7 @@ async function takeSingleScreenShot() {
         if(overlay) overlay.style.display = 'block';
         if(sidebar) sidebar.style.display = 'block';
         if(trigger) trigger.style.display = 'block';
+        
         if(!wasPaused) video.play();
 
         if (response && response.success && response.dataUrl) {
@@ -832,12 +890,12 @@ async function takeSingleScreenShot() {
         if(overlay) overlay.style.display = 'block';
         if(sidebar) sidebar.style.display = 'block';
         if(trigger) trigger.style.display = 'block';
+        
         alert("エラー: " + e.message);
     } finally {
         if(btn) { btn.innerText = "📸 Shot"; btn.style.background = ""; }
     }
 }
-
 function calculateSharpness(ctx, w, h) {
     const sampleW = 120;
     const sampleH = (h/w) * sampleW;
@@ -885,9 +943,14 @@ function showShotSelector(frames) {
     overlay.appendChild(title);
 
     const list = document.createElement('div');
+    
     Object.assign(list.style, {
-        display: 'flex', flexWrap: 'wrap', gap: '15px', 
-        justifyContent: 'center', maxWidth: '95%', padding: '10px'
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(3, 1fr)',         gap: '20px', 
+        justifyContent: 'center', 
+        width: '95%', maxWidth: '1200px', 
+        padding: '10px',
+        boxSizing: 'border-box'
     });
 
     frames.forEach(f => {
@@ -895,11 +958,21 @@ function showShotSelector(frames) {
         try {
             img.src = f.canvas.toDataURL('image/jpeg', 0.8);
             Object.assign(img.style, {
-                height: '140px', cursor: 'pointer', borderRadius: '8px',
-                border: '2px solid rgba(255,255,255,0.2)', transition: 'transform 0.2s'
+                width: '100%', height: 'auto',
+                aspectRatio: '16/9', objectFit: 'cover',
+                cursor: 'pointer', borderRadius: '12px',                 border: '2px solid rgba(255,255,255,0.2)', transition: 'transform 0.2s',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.3)' 
             });
-            img.onmouseenter = () => { img.style.borderColor = '#fff'; img.style.transform = "scale(1.05)"; };
-            img.onmouseleave = () => { img.style.borderColor = 'rgba(255,255,255,0.2)'; img.style.transform = "scale(1)"; };
+            img.onmouseenter = () => { 
+                img.style.borderColor = '#fff'; 
+                img.style.transform = "scale(1.03)"; 
+                img.style.zIndex = "10"; 
+            };
+            img.onmouseleave = () => { 
+                img.style.borderColor = 'rgba(255,255,255,0.2)'; 
+                img.style.transform = "scale(1)"; 
+                img.style.zIndex = "1";
+            };
             
             img.onclick = () => {
                 generateAndShare(f.canvas); 
@@ -912,7 +985,7 @@ function showShotSelector(frames) {
     const closeBtn = document.createElement('button');
     closeBtn.innerText = "キャンセル";
     closeBtn.className = "mv-glass-btn";
-    closeBtn.style.marginTop = "20px";
+    closeBtn.style.marginTop = "25px";
     closeBtn.onclick = () => overlay.remove();
 
     overlay.appendChild(list);
@@ -1104,16 +1177,45 @@ async function generateAndShare(sourceCanvas, selectedLyrics = []) {
 }
 
 function showResultOverlay(currentCanvas, titleText, originalSourceCanvas, currentLyrics) {
-    const old = document.getElementById('shot-result-overlay');
-    if(old) old.remove();
+    const root = document.getElementById('mv-root-container') || document.body;
+    
+
+    const existingOverlay = document.getElementById('shot-result-overlay');
+    if(existingOverlay) {
+        const img = existingOverlay.querySelector('img.preview-image');
+        if(img) {
+            img.src = currentCanvas.toDataURL('image/jpeg', 0.9);
+ 
+            const copyBtn = existingOverlay.querySelector('.copy-btn');
+            if(copyBtn) {
+                 copyBtn.onclick = () => {
+                    currentCanvas.toBlob(blob => {
+                        const item = new ClipboardItem({ "image/png": blob });
+                        navigator.clipboard.write([item]).then(() => {
+                            let text = `🎵 ${titleText}`;
+                            if(currentLyrics.length > 0) {
+                                text += `\n\n"${currentLyrics.join('\n')}"\n`;
+                            }
+                            text += `\n#YTImmersion `;
+                            const encodedText = encodeURIComponent(text);
+                            if(confirm("コピーしました！Xを開きますか？")) {
+                                window.open(`https://twitter.com/intent/tweet?text=${encodedText}`, '_blank');
+                            }
+                        });
+                    });
+                };
+            }
+        }
+        return; // UI再構築はしない
+    }
+
 
     const overlay = document.createElement('div');
     overlay.id = 'shot-result-overlay';
-    const root = document.getElementById('mv-root-container') || document.body;
     
     Object.assign(overlay.style, {
-        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-        background: 'rgba(0,0,0,0.9)', zIndex: 100000, 
+        position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+        background: 'rgba(0,0,0,0.9)', zIndex: 2147483650, 
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         backdropFilter: 'blur(8px)', padding: '20px', boxSizing: 'border-box'
     });
@@ -1129,6 +1231,7 @@ function showResultOverlay(currentCanvas, titleText, originalSourceCanvas, curre
     leftCol.style.display = 'flex'; leftCol.style.flexDirection = 'column'; leftCol.style.alignItems = 'center';
 
     const img = document.createElement('img');
+    img.className = 'preview-image'; 
     img.src = currentCanvas.toDataURL('image/jpeg', 0.9);
     Object.assign(img.style, {
         maxWidth: '100%', maxHeight: '70vh', 
@@ -1147,7 +1250,7 @@ function showResultOverlay(currentCanvas, titleText, originalSourceCanvas, curre
 
     const copyBtn = document.createElement('button');
     copyBtn.innerText = "画像をコピーしてXで共有";
-    copyBtn.className = "mv-glass-btn";
+    copyBtn.className = "mv-glass-btn copy-btn"; // 識別用クラス
     copyBtn.onclick = () => {
         currentCanvas.toBlob(blob => {
             const item = new ClipboardItem({ "image/png": blob });
@@ -1196,8 +1299,10 @@ function showResultOverlay(currentCanvas, titleText, originalSourceCanvas, curre
                         selectedLines.push(line.text);
                     } else {
                         alert("選択できるのは3行までです");
+                        return;
                     }
                 }
+                generateAndShare(originalSourceCanvas, selectedLines);
             };
             rightCol.appendChild(item);
         });
@@ -1207,14 +1312,6 @@ function showResultOverlay(currentCanvas, titleText, originalSourceCanvas, curre
         rightCol.appendChild(noLyric);
     }
 
-    const updateBtn = document.createElement('button');
-    updateBtn.innerText = "画像を更新 🔄";
-    updateBtn.className = "mv-glass-btn";
-    updateBtn.style.width = '100%'; updateBtn.style.marginTop = '15px';
-    updateBtn.onclick = () => {
-        generateAndShare(originalSourceCanvas, selectedLines);
-    };
-    rightCol.appendChild(updateBtn);
 
     contentContainer.appendChild(leftCol);
     if (lyricsData.length > 0) contentContainer.appendChild(rightCol);
@@ -1297,4 +1394,21 @@ function showCenterStatus(type) {
     container.classList.remove('animate');
     void container.offsetWidth; 
     container.classList.add('animate');
+}
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.innerText = message;
+    Object.assign(toast.style, {
+        position: 'fixed', bottom: '100px', left: '50%', transform: 'translateX(-50%)',
+        background: 'rgba(255,255,255,0.9)', color: '#000', padding: '10px 24px',
+        borderRadius: '20px', fontWeight: 'bold', zIndex: '2147483647',
+        boxShadow: '0 5px 15px rgba(0,0,0,0.3)', opacity: '0', transition: 'opacity 0.3s',
+        pointerEvents: 'none'
+    });
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => toast.style.opacity = '1');
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 2000);
 }
